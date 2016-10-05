@@ -14,9 +14,15 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
+import android.support.test.espresso.idling.CountingIdlingResource;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivityTAG_";
+
+    private CountingIdlingResource countingIdlingResource = new CountingIdlingResource("RetrofitResult");
+
+    private boolean completed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
         Observable<List<Result>> resultObservable = RetrofitHelper.Factory
                 .create("Evin1-");
 
+        countingIdlingResource.increment();
+
         resultObservable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -33,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onCompleted() {
                         Log.d(TAG, "onCompleted: ");
+                        completed = true;
+                        countingIdlingResource.decrement();
                     }
 
                     @Override
@@ -48,5 +58,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    public CountingIdlingResource getCountingIdlingResource() {
+        return countingIdlingResource;
+    }
+
+    public boolean isCompleted() {
+        return completed;
     }
 }
